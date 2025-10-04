@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { ModeToggle } from "@/components/mode-toggle";
+import { BookingStatsChart } from "@/components/booking-stats-chart";
+import { RevenueStatsChart } from "@/components/revenue-stats-chart";
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
+    <div className="min-h-screen flex flex-col items-center p-8 bg-background">
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
-      <main className="flex flex-col gap-8 items-center max-w-2xl">
+      <main className="flex flex-col gap-8 items-center w-full max-w-6xl py-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">
             Welcome to PricePOL
@@ -22,27 +24,37 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-4 p-6 rounded-lg border bg-card shadow-sm">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="rounded-md"
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+          <div className="flex flex-col items-center gap-4 p-6 rounded-lg border bg-card shadow-sm">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md"
+            />
 
-          {date && (
-            <div className="text-center pt-4 border-t w-full">
-              <p className="text-sm text-muted-foreground">Selected date:</p>
-              <p className="text-lg font-semibold">
-                {date.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          )}
+            {date && (
+              <div className="text-center pt-4 border-t w-full">
+                <p className="text-sm text-muted-foreground">Selected date:</p>
+                <p className="text-lg font-semibold">
+                  {date.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col">
+            <BookingStatsChart />
+          </div>
+        </div>
+
+        <div className="w-full">
+          <RevenueStatsChart />
         </div>
 
         <div className="text-center space-y-2">
