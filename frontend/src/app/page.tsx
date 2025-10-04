@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
+      <div className="absolute top-4 right-4">
+        <ModeToggle />
+      </div>
       <main className="flex flex-col gap-8 items-center max-w-2xl">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">
