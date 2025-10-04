@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { ModeToggle } from "@/components/mode-toggle";
-import { BookingStatsChart } from "@/components/booking-stats-chart";
-import { RevenueStatsChart } from "@/components/revenue-stats-chart";
+import { CombinedStatsChart } from "@/components/combined-stats-chart";
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -49,12 +48,8 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col">
-            <BookingStatsChart />
+            <CombinedStatsChart />
           </div>
-        </div>
-
-        <div className="w-full">
-          <RevenueStatsChart />
         </div>
 
         <div className="text-center space-y-2">
