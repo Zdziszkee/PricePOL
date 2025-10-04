@@ -233,18 +233,43 @@ export function CombinedStatsChart() {
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="dashed" />}
-              formatter={(value, name) => {
-                if (name === "revenue") {
-                  const actualValue = Number(value) * 100;
-                  return [
-                    `${actualValue.toLocaleString("pl-PL")} zł`,
-                    "Revenue",
-                  ];
-                }
-                return [`${value}%`, "Occupation"];
-              }}
-              labelFormatter={(value) => value}
+              content={
+                <ChartTooltipContent
+                  indicator="dashed"
+                  formatter={(value, name, item) => {
+                    const itemConfig =
+                      chartConfig[name as keyof typeof chartConfig];
+                    const indicatorColor = item.color || item.fill;
+
+                    let displayValue: string;
+                    if (name === "revenue") {
+                      const actualValue = Number(value) * 100;
+                      displayValue = `${actualValue.toLocaleString("pl-PL")} zł`;
+                    } else {
+                      displayValue = `${value}%`;
+                    }
+
+                    return (
+                      <>
+                        <div
+                          className="shrink-0 rounded-[2px] border-[1.5px] border-dashed bg-transparent w-0"
+                          style={{
+                            borderColor: indicatorColor,
+                          }}
+                        />
+                        <div className="flex flex-1 justify-between leading-none items-center gap-2">
+                          <span className="text-muted-foreground">
+                            {itemConfig?.label || name}
+                          </span>
+                          <span className="font-mono font-medium tabular-nums text-foreground ml-auto">
+                            {displayValue}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  }}
+                />
+              }
             />
             <Bar
               dataKey="occupation"
