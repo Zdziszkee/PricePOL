@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import * as React from "react";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
@@ -18,17 +18,26 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ChartDataItem {
+  date: string;
   month: string;
   occupation: number;
   revenue: number;
   actualRevenue: number;
-  year: number;
 }
 
-// Generate combined data for the last 12 months
-function generateCombinedData(): ChartDataItem[] {
+// Generate monthly data for the last 12 months
+function generateMonthlyData(): ChartDataItem[] {
+  const data: ChartDataItem[] = [];
+  const today = new Date();
   const months = [
     "January",
     "February",
@@ -44,39 +53,33 @@ function generateCombinedData(): ChartDataItem[] {
     "December",
   ];
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-
-  const data: ChartDataItem[] = [];
-
   for (let i = 11; i >= 0; i--) {
-    const monthIndex = (currentMonth - i + 12) % 12;
-    const year = currentMonth - i < 0 ? currentYear - 1 : currentYear;
+    const date = new Date(today);
+    date.setMonth(date.getMonth() - i);
+    date.setDate(1); // First day of month
 
-    // Generate realistic booking percentages and revenue
-    let occupation: number;
-    let actualRevenue: number;
+    const monthIndex = date.getMonth();
 
-    if (monthIndex >= 5 && monthIndex <= 8) {
-      // Summer months (June-September)
-      occupation = Math.floor(Math.random() * 30) + 60;
-      actualRevenue = Math.floor(Math.random() * 10000) + 15000;
-    } else if (monthIndex === 11 || monthIndex <= 1) {
-      // Winter months (December-February)
-      occupation = Math.floor(Math.random() * 25) + 50;
-      actualRevenue = Math.floor(Math.random() * 8000) + 10000;
-    } else {
-      // Spring/Fall months
-      occupation = Math.floor(Math.random() * 30) + 40;
-      actualRevenue = Math.floor(Math.random() * 8000) + 8000;
-    }
+    // Higher occupation in summer months
+    const isSummer = monthIndex >= 5 && monthIndex <= 8;
+    const isWinter = monthIndex === 11 || monthIndex <= 1;
+
+    let baseOccupation = 45;
+    if (isSummer) baseOccupation += 25;
+    if (isWinter) baseOccupation += 10;
+
+    const occupation = Math.min(
+      95,
+      baseOccupation + Math.floor(Math.random() * 20),
+    );
+    const actualRevenue = Math.floor(occupation * (Math.random() * 100 + 150));
 
     data.push({
+      date: date.toISOString().split("T")[0],
       month: months[monthIndex],
       occupation,
-      revenue: Math.round(actualRevenue / 100), // Scale down for display
+      revenue: Math.round(actualRevenue / 10), // Scale for display
       actualRevenue,
-      year,
     });
   }
 
@@ -86,60 +89,108 @@ function generateCombinedData(): ChartDataItem[] {
 const chartConfig = {
   occupation: {
     label: "Occupation",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
   revenue: {
     label: "Revenue",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
 export function CombinedStatsChart() {
-  const [chartData, setChartData] = useState<ChartDataItem[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [timeRange, setTimeRange] = React.useState("12");
+  const [allData, setAllData] = React.useState<ChartDataItem[]>([]);
+  const [mounted, setMounted] = React.useState(false);
 
-  useEffect(() => {
-    setChartData(generateCombinedData());
+  React.useEffect(() => {
+    setAllData(generateMonthlyData());
     setMounted(true);
   }, []);
+
+  const filteredData = React.useMemo(() => {
+    if (!mounted || allData.length === 0) return [];
+
+    let monthsToShow = 12;
+
+    if (timeRange === "6") {
+      monthsToShow = 6;
+    } else if (timeRange === "3") {
+      monthsToShow = 3;
+    }
+
+    return allData.slice(-monthsToShow);
+  }, [allData, timeRange, mounted]);
 
   if (!mounted) {
     return null;
   }
 
-  // Calculate totals and trends
-  const totalRevenue = chartData.reduce(
+  // Calculate statistics
+  const totalRevenue = filteredData.reduce(
     (sum, item) => sum + item.actualRevenue,
     0,
   );
   const averageOccupation = Math.round(
-    chartData.reduce((sum, item) => sum + item.occupation, 0) /
-      chartData.length,
+    filteredData.reduce((sum, item) => sum + item.occupation, 0) /
+      filteredData.length,
   );
 
-  const recentRevenueAvg =
-    chartData.slice(-3).reduce((sum, item) => sum + item.actualRevenue, 0) / 3;
-  const previousRevenueAvg =
-    chartData.slice(-6, -3).reduce((sum, item) => sum + item.actualRevenue, 0) /
-    3;
-  const revenueTrend =
-    ((recentRevenueAvg - previousRevenueAvg) / previousRevenueAvg) * 100;
+  const halfwayPoint = Math.floor(filteredData.length / 2);
+  const recentAvgOccupation =
+    filteredData
+      .slice(halfwayPoint)
+      .reduce((sum, item) => sum + item.occupation, 0) /
+    (filteredData.length - halfwayPoint);
+  const previousAvgOccupation =
+    filteredData
+      .slice(0, halfwayPoint)
+      .reduce((sum, item) => sum + item.occupation, 0) / halfwayPoint;
+  const occupationTrend =
+    ((recentAvgOccupation - previousAvgOccupation) / previousAvgOccupation) *
+    100;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Occupation & Revenue Statistics</CardTitle>
-        <CardDescription>Last 12 months</CardDescription>
+      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+        <div className="grid flex-1 gap-1 text-center sm:text-left">
+          <CardTitle>Occupation & Revenue Statistics</CardTitle>
+          <CardDescription>
+            Showing statistics for the selected period
+          </CardDescription>
+        </div>
+        <Select value={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger
+            className="w-[160px] rounded-lg sm:ml-auto"
+            aria-label="Select time range"
+          >
+            <SelectValue placeholder="Last 12 months" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            <SelectItem value="12" className="rounded-lg">
+              Last 12 months
+            </SelectItem>
+            <SelectItem value="6" className="rounded-lg">
+              Last 6 months
+            </SelectItem>
+            <SelectItem value="3" className="rounded-lg">
+              Last 3 months
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <BarChart accessibilityLayer data={filteredData}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="month"
               tickLine={false}
-              tickMargin={10}
               axisLine={false}
+              tickMargin={8}
+              minTickGap={32}
               tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip
@@ -147,7 +198,7 @@ export function CombinedStatsChart() {
               content={<ChartTooltipContent indicator="dashed" />}
               formatter={(value, name) => {
                 if (name === "revenue") {
-                  const actualValue = Number(value) * 100;
+                  const actualValue = Number(value) * 10;
                   return [
                     `${actualValue.toLocaleString("pl-PL")} zł`,
                     "Revenue",
@@ -155,6 +206,7 @@ export function CombinedStatsChart() {
                 }
                 return [`${value}%`, "Occupation"];
               }}
+              labelFormatter={(value) => value}
             />
             <Bar
               dataKey="occupation"
@@ -166,14 +218,14 @@ export function CombinedStatsChart() {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending {revenueTrend > 0 ? "up" : "down"} by{" "}
-          {Math.abs(revenueTrend).toFixed(1)}% this quarter{" "}
+        <div className="flex gap-2 font-medium leading-none">
+          Trending {occupationTrend > 0 ? "up" : "down"} by{" "}
+          {Math.abs(occupationTrend).toFixed(1)}% in selected period{" "}
           <TrendingUp
-            className={`h-4 w-4 ${revenueTrend > 0 ? "" : "rotate-180"}`}
+            className={`h-4 w-4 ${occupationTrend > 0 ? "" : "rotate-180"}`}
           />
         </div>
-        <div className="text-muted-foreground leading-none">
+        <div className="leading-none text-muted-foreground">
           Total revenue: {totalRevenue.toLocaleString("pl-PL")} zł | Avg
           occupation: {averageOccupation}%
         </div>
