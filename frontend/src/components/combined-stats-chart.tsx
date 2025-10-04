@@ -34,56 +34,94 @@ interface ChartDataItem {
   actualRevenue: number;
 }
 
-// Generate monthly data for the last 12 months
+// Hardcoded monthly data for the last 12 months
 function generateMonthlyData(): ChartDataItem[] {
-  const data: ChartDataItem[] = [];
-  const today = new Date();
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+  return [
+    {
+      date: "2024-01-01",
+      month: "January",
+      occupation: 55,
+      revenue: 95,
+      actualRevenue: 9500,
+    },
+    {
+      date: "2024-02-01",
+      month: "February",
+      occupation: 52,
+      revenue: 88,
+      actualRevenue: 8800,
+    },
+    {
+      date: "2024-03-01",
+      month: "March",
+      occupation: 48,
+      revenue: 82,
+      actualRevenue: 8200,
+    },
+    {
+      date: "2024-04-01",
+      month: "April",
+      occupation: 58,
+      revenue: 102,
+      actualRevenue: 10200,
+    },
+    {
+      date: "2024-05-01",
+      month: "May",
+      occupation: 65,
+      revenue: 118,
+      actualRevenue: 11800,
+    },
+    {
+      date: "2024-06-01",
+      month: "June",
+      occupation: 78,
+      revenue: 152,
+      actualRevenue: 15200,
+    },
+    {
+      date: "2024-07-01",
+      month: "July",
+      occupation: 85,
+      revenue: 178,
+      actualRevenue: 17800,
+    },
+    {
+      date: "2024-08-01",
+      month: "August",
+      occupation: 88,
+      revenue: 185,
+      actualRevenue: 18500,
+    },
+    {
+      date: "2024-09-01",
+      month: "September",
+      occupation: 72,
+      revenue: 138,
+      actualRevenue: 13800,
+    },
+    {
+      date: "2024-10-01",
+      month: "October",
+      occupation: 62,
+      revenue: 112,
+      actualRevenue: 11200,
+    },
+    {
+      date: "2024-11-01",
+      month: "November",
+      occupation: 58,
+      revenue: 98,
+      actualRevenue: 9800,
+    },
+    {
+      date: "2024-12-01",
+      month: "December",
+      occupation: 68,
+      revenue: 128,
+      actualRevenue: 12800,
+    },
   ];
-
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(today);
-    date.setMonth(date.getMonth() - i);
-    date.setDate(1); // First day of month
-
-    const monthIndex = date.getMonth();
-
-    // Higher occupation in summer months
-    const isSummer = monthIndex >= 5 && monthIndex <= 8;
-    const isWinter = monthIndex === 11 || monthIndex <= 1;
-
-    let baseOccupation = 45;
-    if (isSummer) baseOccupation += 25;
-    if (isWinter) baseOccupation += 10;
-
-    const occupation = Math.min(
-      95,
-      baseOccupation + Math.floor(Math.random() * 20),
-    );
-    const actualRevenue = Math.floor(occupation * (Math.random() * 100 + 150));
-
-    data.push({
-      date: date.toISOString().split("T")[0],
-      month: months[monthIndex],
-      occupation,
-      revenue: Math.round(actualRevenue / 10), // Scale for display
-      actualRevenue,
-    });
-  }
-
-  return data;
 }
 
 const chartConfig = {
@@ -198,7 +236,7 @@ export function CombinedStatsChart() {
               content={<ChartTooltipContent indicator="dashed" />}
               formatter={(value, name) => {
                 if (name === "revenue") {
-                  const actualValue = Number(value) * 10;
+                  const actualValue = Number(value) * 100;
                   return [
                     `${actualValue.toLocaleString("pl-PL")} zł`,
                     "Revenue",
